@@ -4,23 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SoulChat — Converse com qualquer personagem</title>
-<meta name="description" content="Crie e converse com personagens de IA. Goku, Naruto, Batman, Sherlock Holmes ou qualquer um que você imaginar. Personalidade, tom de voz e histórico.">
+<meta name="description" content="Crie e converse com personagens de IA. Goku, Sherlock Holmes, Batman, Einstein ou qualquer um que você imaginar. Personalidade, tom de voz e histórico.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
 <style>
   * { box-sizing: border-box; }
   :root {
-    --bg-0: #0a0a0f;
-    --bg-1: #13131a;
-    --bg-2: #1a1a24;
-    --bg-3: #232333;
-    --border: #2a2a3a;
-    --text: #e4e4ef;
-    --text-dim: #8888a0;
-    --accent: #a855f7;
-    --accent-2: #ec4899;
-    --accent-3: #06b6d4;
-    --success: #10b981;
-    --error: #ef4444;
+    /* SoulChat: roxo/rosa profundo — identidade "alma/personagens" */
+    --bg-0: #0c0518;
+    --bg-1: #1a0d2e;
+    --bg-2: #251536;
+    --bg-3: #321d4a;
+    --border: #3d2459;
+    --text: #f3e9ff;
+    --text-dim: #9c8ab8;
+    --accent: #c084fc;
+    --accent-2: #f472b6;
+    --accent-3: #818cf8;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --error: #f87171;
   }
   html { color-scheme: dark; }
   body {
@@ -36,8 +38,8 @@
     position: fixed;
     inset: 0;
     background:
-      radial-gradient(ellipse 60% 50% at 80% 0%, rgba(168, 85, 247, 0.15), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 0% 100%, rgba(6, 182, 212, 0.1), transparent 60%);
+      radial-gradient(ellipse 70% 50% at 80% 0%, rgba(192, 132, 252, 0.2), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 0% 100%, rgba(244, 114, 182, 0.15), transparent 60%);
     pointer-events: none;
     z-index: 0;
   }
@@ -81,7 +83,7 @@
   select.lang-select {
     padding: 8px 30px 8px 12px;
     border: 1px solid var(--border);
-    background: var(--bg-2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238888a0'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 8px center / 16px;
+    background: var(--bg-2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239c8ab8'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 8px center / 16px;
     color: var(--text); border-radius: 8px; cursor: pointer;
     font-size: 13px; font-family: inherit; appearance: none;
   }
@@ -100,9 +102,15 @@
     border: none; color: white;
   }
   .btn-primary:hover { color: white; box-shadow: 0 8px 24px -8px var(--accent); }
+  .btn-secondary {
+    background: var(--bg-3);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .btn-secondary:hover { background: var(--accent); color: white; }
   .btn-icon { padding: 8px; width: 36px; height: 36px; justify-content: center; }
 
-  /* Welcome / Home */
+  /* Home */
   .home {
     flex: 1;
     display: flex;
@@ -151,7 +159,6 @@
   }
   .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -8px var(--accent); }
 
-  /* Featured characters */
   .featured-section {
     margin-top: 48px;
     max-width: 900px;
@@ -179,6 +186,9 @@
     cursor: pointer;
     transition: all 0.2s;
     text-align: left;
+    display: flex;
+    gap: 12px;
+    align-items: center;
   }
   .featured-card:hover {
     border-color: var(--accent);
@@ -191,12 +201,14 @@
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     display: flex; align-items: center; justify-content: center;
     font-size: 28px;
-    margin-bottom: 12px;
+    flex-shrink: 0;
+    overflow: hidden;
   }
+  .featured-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .featured-card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
   .featured-card p { margin: 0; font-size: 12px; color: var(--text-dim); line-height: 1.4; }
 
-  /* Create character */
+  /* Create */
   .create-screen {
     flex: 1;
     display: flex;
@@ -211,10 +223,108 @@
     padding: 32px;
     max-width: 640px;
     width: 100%;
-    box-shadow: 0 20px 60px -20px rgba(168, 85, 247, 0.4);
+    box-shadow: 0 20px 60px -20px rgba(192, 132, 252, 0.4);
   }
   .create-title { font-size: 24px; font-weight: 700; margin: 0 0 8px; }
   .create-sub { color: var(--text-dim); margin: 0 0 24px; font-size: 14px; }
+
+  /* Magic generate box */
+  .magic-box {
+    background: linear-gradient(135deg, rgba(192, 132, 252, 0.1), rgba(244, 114, 182, 0.1));
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .magic-box-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .magic-box-title-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .magic-box-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0 0 14px;
+    line-height: 1.5;
+  }
+  .magic-input-row {
+    display: flex;
+    gap: 8px;
+  }
+  .magic-input-row input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    color: var(--text);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .magic-input-row input:focus { border-color: var(--accent); }
+  .magic-btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .magic-btn:hover { box-shadow: 0 8px 24px -8px var(--accent); }
+  .magic-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .magic-status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--accent);
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .magic-status.show { display: flex; }
+  .magic-status .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(192, 132, 252, 0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    color: var(--text-dim);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
 
   .input-group { margin-bottom: 18px; }
   .input-group label {
@@ -251,7 +361,7 @@
   .trait-chip:hover { border-color: var(--accent); }
   .trait-chip.selected {
     border-color: var(--accent);
-    background: rgba(168, 85, 247, 0.15);
+    background: rgba(192, 132, 252, 0.15);
     color: var(--accent);
   }
 
@@ -276,7 +386,10 @@
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     display: flex; align-items: center; justify-content: center;
     font-size: 24px;
+    overflow: hidden;
+    flex-shrink: 0;
   }
+  .chat-info-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .chat-info h3 { margin: 0; font-size: 16px; font-weight: 600; }
   .chat-info p { margin: 0; font-size: 12px; color: var(--text-dim); }
 
@@ -302,7 +415,9 @@
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     font-size: 18px;
+    overflow: hidden;
   }
+  .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .message.user .msg-avatar { background: var(--bg-3); }
   .message.character .msg-avatar {
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -322,7 +437,7 @@
     border-bottom-right-radius: 4px;
   }
   .message.character .msg-bubble { border-bottom-left-radius: 4px; }
-  .msg-bubble em { color: var(--text-dim); }
+  .msg-bubble em { color: var(--text-dim); font-style: italic; }
   .msg-bubble strong { color: var(--accent-3); }
 
   .typing {
@@ -380,7 +495,7 @@
   .send-btn:hover { transform: scale(1.05); }
   .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  /* Modal for character details */
+  /* Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -403,7 +518,16 @@
     max-height: 80vh;
     overflow-y: auto;
   }
-  .modal h3 { margin: 0 0 16px; font-size: 20px; }
+  .modal h3 { margin: 0 0 16px; font-size: 20px; display: flex; align-items: center; gap: 12px; }
+  .modal-avatar {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    overflow: hidden;
+  }
+  .modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .modal-detail { margin-bottom: 14px; }
   .modal-detail-label {
     font-size: 11px;
@@ -418,7 +542,6 @@
     width: 100%;
   }
 
-  /* Toast */
   .toast {
     position: fixed;
     bottom: 24px;
@@ -455,6 +578,7 @@
     .create-title { font-size: 20px; }
     .chat-messages { padding: 14px; min-height: 280px; }
     .msg-bubble { font-size: 13px; }
+    .magic-input-row { flex-direction: column; }
   }
 </style>
 </head>
@@ -483,14 +607,14 @@
     </div>
   </header>
 
-  <!-- Home / Welcome -->
+  <!-- Home -->
   <div class="home" id="homeScreen">
     <div class="home-icon">💬</div>
     <h2 data-i18n="home-title">Converse com qualquer personagem</h2>
     <p data-i18n="home-desc">
       Crie personagens de IA com personalidade, tom de voz e história.
-      Converse com Goku, Sherlock Holmes, Batman, sua avó falecida ou
-      qualquer um que você imaginar. A IA dá vida à personalidade.
+      Converse com Goku, Sherlock Holmes, Batman, Einstein ou qualquer
+      personagem que você imaginar — a IA dá vida à personalidade.
     </p>
     <button class="btn-cta" onclick="showCreate()">
       <span data-i18n="create-btn">✨ Criar personagem</span>
@@ -503,11 +627,35 @@
     </div>
   </div>
 
-  <!-- Create character -->
+  <!-- Create -->
   <div class="create-screen" id="createScreen" style="display:none;">
     <div class="create-card">
       <h2 class="create-title" data-i18n="create-title">Criar personagem</h2>
-      <p class="create-sub" data-i18n="create-sub">Descreva o personagem e a IA dá vida à personalidade.</p>
+      <p class="create-sub" data-i18n="create-sub">A IA pesquisa o personagem pra você, ou preencha manualmente abaixo.</p>
+
+      <!-- MAGIC BOX: Gerar com IA -->
+      <div class="magic-box">
+        <div class="magic-box-title">
+          <div class="magic-box-title-icon">🪄</div>
+          <span data-i18n="magic-title">Gerar com IA</span>
+        </div>
+        <p class="magic-box-desc" data-i18n="magic-desc">
+          Digite só o nome do personagem. A IA pesquisa na Wikipedia,
+          gera a descrição, personalidade e tom de voz automaticamente.
+        </p>
+        <div class="magic-input-row">
+          <input type="text" id="magicInput" data-i18n-ph="magic-ph" placeholder="Ex.: Goku, Sherlock Holmes, Albert Einstein, Naruto...">
+          <button class="magic-btn" id="magicBtn" onclick="generateWithAI()">
+            <span data-i18n="magic-go">🪄 Gerar</span>
+          </button>
+        </div>
+        <div class="magic-status" id="magicStatus">
+          <div class="spinner"></div>
+          <span id="magicStatusText" data-i18n="magic-loading">Pesquisando personagem...</span>
+        </div>
+      </div>
+
+      <div class="divider" data-i18n="or-manual">Ou preencha manualmente</div>
 
       <div class="input-group">
         <label data-i18n="name-label">Nome do personagem</label>
@@ -571,11 +719,10 @@
   </div>
 
   <footer>
-    <span data-i18n="footer-made">Feito com</span> 💜 <span data-i18n="footer-by">por</span> <a href="https://github.com/lukepalys" target="_blank" rel="noopener">LukePalys</a> • <span data-i18n="footer-tech">Pollinations AI · 100% no navegador</span>
+    <span data-i18n="footer-made">Feito com</span> 💜 <span data-i18n="footer-by">por</span> <a href="https://github.com/lukepalys" target="_blank" rel="noopener">LukePalys</a> • <span data-i18n="footer-tech">Pollinations + Wikipedia · 100% no navegador</span>
   </footer>
 </div>
 
-<!-- Character modal -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
   <div class="modal">
     <h3 id="modalTitle">—</h3>
@@ -592,11 +739,21 @@ const I18N = {
   'pt-BR': {
     tagline: 'Converse com qualquer personagem',
     'home-title': 'Converse com qualquer personagem',
-    'home-desc': 'Crie personagens de IA com personalidade, tom de voz e história. Converse com Goku, Sherlock Holmes, Batman, sua avó falecida ou qualquer um que você imaginar. A IA dá vida à personalidade.',
+    'home-desc': 'Crie personagens de IA com personalidade, tom de voz e história. Converse com Goku, Sherlock Holmes, Batman, Einstein ou qualquer personagem que você imaginar — a IA dá vida à personalidade.',
     'create-btn': '✨ Criar personagem',
     featured: 'Personagens sugeridos',
     'create-title': 'Criar personagem',
-    'create-sub': 'Descreva o personagem e a IA dá vida à personalidade.',
+    'create-sub': 'A IA pesquisa o personagem pra você, ou preencha manualmente abaixo.',
+    'magic-title': 'Gerar com IA',
+    'magic-desc': 'Digite só o nome do personagem. A IA pesquisa na Wikipedia, gera a descrição, personalidade e tom de voz automaticamente.',
+    'magic-ph': 'Ex.: Goku, Sherlock Holmes, Albert Einstein, Naruto...',
+    'magic-go': '🪄 Gerar',
+    'magic-loading': 'Pesquisando personagem...',
+    'magic-step-wiki': 'Buscando na Wikipedia...',
+    'magic-step-ai': 'Gerando personalidade com IA...',
+    'magic-success': '✅ Personagem gerado! Confira os campos abaixo.',
+    'magic-fail': 'Não encontrei esse personagem. Preencha manualmente ou tente outro nome.',
+    'or-manual': 'Ou preencha manualmente',
     'name-label': 'Nome do personagem',
     'name-ph': 'Ex.: Goku, Sherlock Holmes, Einstein...',
     'universe-label': 'Universo / Origem (opcional)',
@@ -613,7 +770,7 @@ const I18N = {
     'chat-ph': 'Mande mensagem...',
     'footer-made': 'Feito com',
     'footer-by': 'por',
-    'footer-tech': 'Pollinations AI · 100% no navegador',
+    'footer-tech': 'Pollinations + Wikipedia · 100% no navegador',
     close: 'Fechar',
     'need-name': 'Digite o nome do personagem 🙂',
     'failed': 'Tive um problema pra responder. Tenta de novo.',
@@ -623,11 +780,21 @@ const I18N = {
   en: {
     tagline: 'Chat with any character',
     'home-title': 'Chat with any character',
-    'home-desc': 'Create AI characters with personality, voice and backstory. Chat with Goku, Sherlock Holmes, Batman, your late grandmother or anyone you imagine. The AI brings the personality to life.',
+    'home-desc': 'Create AI characters with personality, voice and backstory. Chat with Goku, Sherlock Holmes, Batman, Einstein or any character you imagine — the AI brings the personality to life.',
     'create-btn': '✨ Create character',
     featured: 'Suggested characters',
     'create-title': 'Create character',
-    'create-sub': 'Describe the character and the AI brings their personality to life.',
+    'create-sub': 'The AI researches the character for you, or fill in manually below.',
+    'magic-title': 'Generate with AI',
+    'magic-desc': 'Just type the character name. The AI searches Wikipedia and generates the description, personality and speech style automatically.',
+    'magic-ph': 'E.g.: Goku, Sherlock Holmes, Albert Einstein, Naruto...',
+    'magic-go': '🪄 Generate',
+    'magic-loading': 'Researching character...',
+    'magic-step-wiki': 'Searching Wikipedia...',
+    'magic-step-ai': 'Generating personality with AI...',
+    'magic-success': '✅ Character generated! Check the fields below.',
+    'magic-fail': 'I couldn\'t find that character. Fill in manually or try another name.',
+    'or-manual': 'Or fill in manually',
     'name-label': 'Character name',
     'name-ph': 'E.g.: Goku, Sherlock Holmes, Einstein...',
     'universe-label': 'Universe / Origin (optional)',
@@ -644,7 +811,7 @@ const I18N = {
     'chat-ph': 'Send message...',
     'footer-made': 'Made with',
     'footer-by': 'by',
-    'footer-tech': 'Pollinations AI · 100% in browser',
+    'footer-tech': 'Pollinations + Wikipedia · 100% in browser',
     close: 'Close',
     'need-name': 'Type the character name 🙂',
     'failed': 'I had trouble responding. Try again.',
@@ -654,11 +821,21 @@ const I18N = {
   es: {
     tagline: 'Chatea con cualquier personaje',
     'home-title': 'Chatea con cualquier personaje',
-    'home-desc': 'Crea personajes de IA con personalidad, voz e historia. Chatea con Goku, Sherlock Holmes, Batman, tu abuela fallecida o cualquier persona que imagines. La IA da vida a la personalidad.',
+    'home-desc': 'Crea personajes de IA con personalidad, voz e historia. Chatea con Goku, Sherlock Holmes, Batman, Einstein o cualquier personaje que imagines — la IA da vida a la personalidad.',
     'create-btn': '✨ Crear personaje',
     featured: 'Personajes sugeridos',
     'create-title': 'Crear personaje',
-    'create-sub': 'Describe el personaje y la IA da vida a su personalidad.',
+    'create-sub': 'La IA investiga el personaje por ti, o completa manualmente abajo.',
+    'magic-title': 'Generar con IA',
+    'magic-desc': 'Solo escribe el nombre del personaje. La IA busca en Wikipedia y genera descripción, personalidad y estilo de habla automáticamente.',
+    'magic-ph': 'Ej.: Goku, Sherlock Holmes, Albert Einstein, Naruto...',
+    'magic-go': '🪄 Generar',
+    'magic-loading': 'Investigando personaje...',
+    'magic-step-wiki': 'Buscando en Wikipedia...',
+    'magic-step-ai': 'Generando personalidad con IA...',
+    'magic-success': '✅ ¡Personaje generado! Revisa los campos abajo.',
+    'magic-fail': 'No encontré ese personaje. Completa manualmente o prueba otro nombre.',
+    'or-manual': 'O completa manualmente',
     'name-label': 'Nombre del personaje',
     'name-ph': 'Ej.: Goku, Sherlock Holmes, Einstein...',
     'universe-label': 'Universo / Origen (opcional)',
@@ -675,7 +852,7 @@ const I18N = {
     'chat-ph': 'Enviar mensaje...',
     'footer-made': 'Hecho con',
     'footer-by': 'por',
-    'footer-tech': 'Pollinations AI · 100% en el navegador',
+    'footer-tech': 'Pollinations + Wikipedia · 100% en el navegador',
     close: 'Cerrar',
     'need-name': 'Escribe el nombre del personaje 🙂',
     'failed': 'Tuve un problema al responder. Intenta de nuevo.',
@@ -685,11 +862,21 @@ const I18N = {
   fr: {
     tagline: 'Discutez avec n\'importe quel personnage',
     'home-title': 'Discutez avec n\'importe quel personnage',
-    'home-desc': 'Créez des personnages IA avec personnalité, voix et histoire. Discutez avec Goku, Sherlock Holmes, Batman, votre grand-mère disparue ou quiconque vous imaginez. L\'IA donne vie à la personnalité.',
+    'home-desc': 'Créez des personnages IA avec personnalité, voix et histoire. Discutez avec Goku, Sherlock Holmes, Batman, Einstein ou tout personnage que vous imaginez — l\'IA donne vie à la personnalité.',
     'create-btn': '✨ Créer un personnage',
     featured: 'Personnages suggérés',
     'create-title': 'Créer un personnage',
-    'create-sub': 'Décrivez le personnage et l\'IA donne vie à sa personnalité.',
+    'create-sub': 'L\'IA recherche le personnage pour vous, ou remplissez manuellement ci-dessous.',
+    'magic-title': 'Générer avec l\'IA',
+    'magic-desc': 'Tapez juste le nom du personnage. L\'IA cherche sur Wikipédia et génère description, personnalité et style de parole automatiquement.',
+    'magic-ph': 'Ex. : Goku, Sherlock Holmes, Albert Einstein, Naruto...',
+    'magic-go': '🪄 Générer',
+    'magic-loading': 'Recherche du personnage...',
+    'magic-step-wiki': 'Recherche sur Wikipédia...',
+    'magic-step-ai': 'Génération de personnalité par IA...',
+    'magic-success': '✅ Personnage généré ! Vérifiez les champs ci-dessous.',
+    'magic-fail': 'Personnage introuvable. Remplissez manuellement ou essayez un autre nom.',
+    'or-manual': 'Ou remplissez manuellement',
     'name-label': 'Nom du personnage',
     'name-ph': 'Ex. : Goku, Sherlock Holmes, Einstein...',
     'universe-label': 'Univers / Origine (facultatif)',
@@ -700,13 +887,13 @@ const I18N = {
     'speech-label': 'Comment parle-t-il ? (facultatif)',
     'speech-ph': 'Ex. : accent, argot, expressions typiques...',
     'greeting-label': 'Premier message du personnage (facultatif)',
-    'greeting-ph': "Ex. : 'Salut ! Comment puis-je t\'aider ?'",
+    'greeting-ph': "Ex. : 'Salut ! Comment puis-je t'aider ?'",
     cancel: 'Annuler',
     'start-chat': 'Commencer la conversation',
     'chat-ph': 'Envoyer un message...',
     'footer-made': 'Fait avec',
     'footer-by': 'par',
-    'footer-tech': 'Pollinations AI · 100% navigateur',
+    'footer-tech': 'Pollinations + Wikipedia · 100% navigateur',
     close: 'Fermer',
     'need-name': 'Tapez le nom du personnage 🙂',
     'failed': 'Problème de réponse. Réessayez.',
@@ -716,11 +903,21 @@ const I18N = {
   de: {
     tagline: 'Chatte mit jedem Charakter',
     'home-title': 'Chatte mit jedem Charakter',
-    'home-desc': 'Erstelle KI-Charaktere mit Persönlichkeit, Stimme und Hintergrund. Chatte mit Goku, Sherlock Holmes, Batman, deiner verstorbenen Oma oder jedem, den du dir vorstellen kannst. Die KI erweckt die Persönlichkeit zum Leben.',
+    'home-desc': 'Erstelle KI-Charaktere mit Persönlichkeit, Stimme und Hintergrund. Chatte mit Goku, Sherlock Holmes, Batman, Einstein oder jedem Charakter, den du dir vorstellst — die KI erweckt die Persönlichkeit zum Leben.',
     'create-btn': '✨ Charakter erstellen',
     featured: 'Vorgeschlagene Charaktere',
     'create-title': 'Charakter erstellen',
-    'create-sub': 'Beschreibe den Charakter und die KI erweckt die Persönlichkeit zum Leben.',
+    'create-sub': 'Die KI recherchiert den Charakter für dich, oder fülle unten manuell aus.',
+    'magic-title': 'Mit KI generieren',
+    'magic-desc': 'Tippe nur den Namen des Charakters. Die KI sucht auf Wikipedia und generiert Beschreibung, Persönlichkeit und Sprechstil automatisch.',
+    'magic-ph': 'z.B.: Goku, Sherlock Holmes, Albert Einstein, Naruto...',
+    'magic-go': '🪄 Generieren',
+    'magic-loading': 'Charakter wird recherchiert...',
+    'magic-step-wiki': 'Wikipedia wird durchsucht...',
+    'magic-step-ai': 'KI generiert Persönlichkeit...',
+    'magic-success': '✅ Charakter generiert! Felder unten prüfen.',
+    'magic-fail': 'Charakter nicht gefunden. Manuell ausfüllen oder anderen Namen versuchen.',
+    'or-manual': 'Oder manuell ausfüllen',
     'name-label': 'Charaktername',
     'name-ph': 'z.B.: Goku, Sherlock Holmes, Einstein...',
     'universe-label': 'Universum / Herkunft (optional)',
@@ -737,7 +934,7 @@ const I18N = {
     'chat-ph': 'Nachricht senden...',
     'footer-made': 'Gemacht mit',
     'footer-by': 'von',
-    'footer-tech': 'Pollinations AI · 100% im Browser',
+    'footer-tech': 'Pollinations + Wikipedia · 100% im Browser',
     close: 'Schließen',
     'need-name': 'Charakternamen eingeben 🙂',
     'failed': 'Antwortproblem. Erneut versuchen.',
@@ -747,11 +944,21 @@ const I18N = {
   it: {
     tagline: 'Chatta con qualsiasi personaggio',
     'home-title': 'Chatta con qualsiasi personaggio',
-    'home-desc': 'Crea personaggi IA con personalità, voce e storia. Chatta con Goku, Sherlock Holmes, Batman, tua nonna scomparsa o chiunque tu immagini. L\'IA dà vita alla personalità.',
+    'home-desc': 'Crea personaggi IA con personalità, voce e storia. Chatta con Goku, Sherlock Holmes, Batman, Einstein o qualsiasi personaggio tu immagini — l\'IA dà vita alla personalità.',
     'create-btn': '✨ Crea personaggio',
     featured: 'Personaggi suggeriti',
     'create-title': 'Crea personaggio',
-    'create-sub': 'Descrivi il personaggio e l\'IA dà vita alla personalità.',
+    'create-sub': 'L\'IA ricerca il personaggio per te, o compila manualmente sotto.',
+    'magic-title': 'Genera con IA',
+    'magic-desc': 'Digita solo il nome del personaggio. L\'IA cerca su Wikipedia e genera descrizione, personalità e stile di voce automaticamente.',
+    'magic-ph': 'Es.: Goku, Sherlock Holmes, Albert Einstein, Naruto...',
+    'magic-go': '🪄 Genera',
+    'magic-loading': 'Ricerca personaggio...',
+    'magic-step-wiki': 'Ricerca su Wikipedia...',
+    'magic-step-ai': 'IA genera personalità...',
+    'magic-success': '✅ Personaggio generato! Controlla i campi sotto.',
+    'magic-fail': 'Personaggio non trovato. Compila manualmente o prova un altro nome.',
+    'or-manual': 'O compila manualmente',
     'name-label': 'Nome del personaggio',
     'name-ph': 'Es.: Goku, Sherlock Holmes, Einstein...',
     'universe-label': 'Universo / Origine (facoltativo)',
@@ -768,7 +975,7 @@ const I18N = {
     'chat-ph': 'Invia messaggio...',
     'footer-made': 'Fatto con',
     'footer-by': 'da',
-    'footer-tech': 'Pollinations AI · 100% nel browser',
+    'footer-tech': 'Pollinations + Wikipedia · 100% nel browser',
     close: 'Chiudi',
     'need-name': 'Inserisci il nome del personaggio 🙂',
     'failed': 'Problema nella risposta. Riprova.',
@@ -778,11 +985,21 @@ const I18N = {
   ja: {
     tagline: 'どんなキャラクターとでも会話',
     'home-title': 'どんなキャラクターとでも会話',
-    'home-desc': '個性、声、背景を持つAIキャラクターを作成。孫悟空、シャーロック・ホームズ、バットマン、亡きおばあちゃん、想像できる誰とでも会話できます。AIが性格に命を吹き込みます。',
+    'home-desc': '個性、声、背景を持つAIキャラクターを作成。孫悟空、シャーロック・ホームズ、バットマン、アインシュタイン、想像できるキャラクター誰とでも — AIが性格に命を吹き込みます。',
     'create-btn': '✨ キャラクター作成',
     featured: 'おすすめキャラクター',
     'create-title': 'キャラクター作成',
-    'create-sub': 'キャラクターを説明すると、AIが性格に命を吹き込みます。',
+    'create-sub': 'AIがキャラクターを調査します。または下に手動で入力。',
+    'magic-title': 'AIで生成',
+    'magic-desc': 'キャラクター名だけ入力。AIがWikipediaで検索し、説明、性格、話し方を自動生成します。',
+    'magic-ph': '例：孫悟空、シャーロック・ホームズ、アインシュタイン、ナルト...',
+    'magic-go': '🪄 生成',
+    'magic-loading': 'キャラクターを検索中...',
+    'magic-step-wiki': 'Wikipediaを検索中...',
+    'magic-step-ai': 'AIが性格を生成中...',
+    'magic-success': '✅ キャラクター生成完了！下のフィールドを確認。',
+    'magic-fail': 'キャラクターが見つかりません。手動入力または別の名前をお試しください。',
+    'or-manual': 'または手動入力',
     'name-label': 'キャラクター名',
     'name-ph': '例：孫悟空、シャーロック・ホームズ、アインシュタイン...',
     'universe-label': 'ユニバース / 起点（任意）',
@@ -799,7 +1016,7 @@ const I18N = {
     'chat-ph': 'メッセージ送信...',
     'footer-made': '作成:',
     'footer-by': '',
-    'footer-tech': 'Pollinations AI · 100%ブラウザ内',
+    'footer-tech': 'Pollinations + Wikipedia · 100%ブラウザ内',
     close: '閉じる',
     'need-name': 'キャラクター名を入力してください 🙂',
     'failed': '応答に問題が発生しました。再試行してください。',
@@ -809,11 +1026,21 @@ const I18N = {
   'zh-CN': {
     tagline: '与任何角色聊天',
     'home-title': '与任何角色聊天',
-    'home-desc': '创建具有个性、声音和背景的 AI 角色。与孙悟空、夏洛克·福尔摩斯、蝙蝠侠、已故的祖母或任何您想象的人聊天。AI 赋予角色生命。',
+    'home-desc': '创建具有个性、声音和背景的 AI 角色。与孙悟空、夏洛克·福尔摩斯、蝙蝠侠、爱因斯坦或任何您想象的角色聊天 — AI 赋予角色生命。',
     'create-btn': '✨ 创建角色',
     featured: '推荐角色',
     'create-title': '创建角色',
-    'create-sub': '描述角色，AI 赋予个性生命。',
+    'create-sub': 'AI 为您研究角色，或在下方手动填写。',
+    'magic-title': 'AI 生成',
+    'magic-desc': '只需输入角色名称。AI 在维基百科搜索并自动生成描述、性格和说话风格。',
+    'magic-ph': '例如：孙悟空、夏洛克·福尔摩斯、爱因斯坦、鸣人...',
+    'magic-go': '🪄 生成',
+    'magic-loading': '正在研究角色...',
+    'magic-step-wiki': '正在搜索维基百科...',
+    'magic-step-ai': 'AI 生成性格...',
+    'magic-success': '✅ 角色已生成！请查看下方字段。',
+    'magic-fail': '未找到角色。请手动填写或尝试其他名称。',
+    'or-manual': '或手动填写',
     'name-label': '角色名称',
     'name-ph': '例如：孙悟空、夏洛克·福尔摩斯、爱因斯坦...',
     'universe-label': '宇宙 / 出处（可选）',
@@ -830,7 +1057,7 @@ const I18N = {
     'chat-ph': '发送消息...',
     'footer-made': '用',
     'footer-by': '由',
-    'footer-tech': 'Pollinations AI · 100% 浏览器内',
+    'footer-tech': 'Pollinations + Wikipedia · 100% 浏览器内',
     close: '关闭',
     'need-name': '请输入角色名称 🙂',
     'failed': '回复出错了。请重试。',
@@ -887,21 +1114,22 @@ const TRAITS = [
 ];
 
 const FEATURED = [
-  { name: 'Goku', universe: 'Dragon Ball', icon: '🐉', desc: 'Guerreiro Saiyajin que adora lutar comer e proteger seus amigos. Sempre busca ficar mais forte.', traits: ['warrior', 'happy', 'competitive'], speech: 'Emocionado, fala de luta e comida' },
-  { name: 'Sherlock Holmes', universe: 'BBC Sherlock', icon: '🔍', desc: 'Detetive consultor de Londres. Observador brilhante, lógico e às vezes insensível.', traits: ['intellectual', 'sarcastic', 'cold'], speech: 'Rápido, lógico, às vezes arrogante' },
-  { name: 'Batman', universe: 'DC Comics', icon: '🦇', desc: 'Bruce Wayne, vigilante de Gotham. Sombrio, determinado, protetor.', traits: ['mysterious', 'warrior', 'cold'], speech: 'Sério, curto, direto' },
-  { name: 'Einstein', universe: 'História', icon: '⚗️', desc: 'Físico teórico, pai da relatividade. Curioso, criativo, gostava de pensar fora da caixa.', traits: ['intellectual', 'wise', 'gentle'], speech: 'Pensativo, usa analogias' },
-  { name: 'Fada do Dente', universe: 'Folclore', icon: '🧚', desc: 'Fada que troca dentes de leite por dinheiro enquanto crianças dormem. Mágica e brincalhona.', traits: ['charming', 'happy', 'mysterious'], speech: 'Doce, mágica, misteriosa' },
-  { name: 'Mr. Bean', universe: 'Comédia BBC', icon: '🤵', desc: 'Personagem desastrado e quieto do Rowan Atkinson. Resolve problemas de forma absurda.', traits: ['childish', 'crazy', 'shy'], speech: 'Poucas palavras, muitos sons' },
+  { name: 'Goku', universe: 'Dragon Ball', icon: '🐉', desc: 'Guerreiro Saiyajin que adora lutar, comer e proteger seus amigos. Sempre busca ficar mais forte.', traits: ['warrior', 'happy', 'competitive'], speech: 'Emocionado, fala de luta e comida', wikiPage: 'Son Goku' },
+  { name: 'Sherlock Holmes', universe: 'BBC Sherlock', icon: '🔍', desc: 'Detetive consultor de Londres. Observador brilhante, lógico e às vezes insensível.', traits: ['intellectual', 'sarcastic', 'cold'], speech: 'Rápido, lógico, às vezes arrogante', wikiPage: 'Sherlock Holmes' },
+  { name: 'Batman', universe: 'DC Comics', icon: '🦇', desc: 'Bruce Wayne, vigilante de Gotham. Sombrio, determinado, protetor da justiça.', traits: ['mysterious', 'warrior', 'cold'], speech: 'Sério, curto, direto', wikiPage: 'Batman' },
+  { name: 'Albert Einstein', universe: 'História', icon: '⚗️', desc: 'Físico teórico, pai da relatividade. Curioso, criativo, pensava fora da caixa.', traits: ['intellectual', 'wise', 'gentle'], speech: 'Pensativo, usa analogias', wikiPage: 'Albert Einstein' },
+  { name: 'Naruto Uzumaki', universe: 'Naruto', icon: '🍥', desc: 'Ninja determinado que quer virar Hokage. Energético, leal, nunca desiste.', traits: ['warrior', 'happy', 'competitive'], speech: 'Energético, fala de virar Hokage', wikiPage: 'Naruto Uzumaki' },
+  { name: 'Yoda', universe: 'Star Wars', icon: '👽', desc: 'Mestre Jedi milenar, sábio e poderoso. Fala de forma invertida e enigmática.', traits: ['wise', 'mysterious', 'gentle'], speech: 'Ordem invertida das palavras, sábio', wikiPage: 'Yoda' },
 ];
 
 let character = null;
 let messages = [];
 let selectedTraits = [];
 let isThinking = false;
+let isGenerating = false;
 
 // ===================== AI CALL =====================
-async function callAI(aiMessages) {
+async function callAI(aiMessages, maxTokens = 600) {
   const res = await fetch('https://text.pollinations.ai/openai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -909,7 +1137,7 @@ async function callAI(aiMessages) {
       model: 'openai-fast',
       messages: aiMessages,
       temperature: 0.85,
-      max_tokens: 600,
+      max_tokens: maxTokens,
     }),
   });
   if (!res.ok) throw new Error('Pollinations: ' + res.status);
@@ -917,31 +1145,125 @@ async function callAI(aiMessages) {
   return data.choices?.[0]?.message?.content || '';
 }
 
-function buildSystemPrompt() {
+// ===================== WIKIPEDIA SEARCH =====================
+// Map language code to Wikipedia language
+function getWikiLang() {
   const lang = document.documentElement.lang || 'pt-BR';
-  const langName = { 'pt-BR': 'Portuguese (Brazil)', en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', ja: 'Japanese', 'zh-CN': 'Chinese (Simplified)' }[lang] || 'English';
+  return lang.split('-')[0]; // pt-BR → pt, en → en
+}
 
-  const traitLabels = character.traits.map(id => {
-    const trait = TRAITS.find(t => t.id === id);
-    return trait ? trait.label[lang] || trait.label.en : id;
-  });
+// Search Wikipedia for a character
+async function searchWikipedia(query) {
+  const wikiLang = getWikiLang();
+  // Use the search API to find the best matching page
+  const searchUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=3`;
+  const searchRes = await fetch(searchUrl);
+  if (!searchRes.ok) throw new Error('Wiki search failed');
+  const searchData = await searchRes.json();
+  const results = searchData?.query?.search || [];
+  if (results.length === 0) return null;
 
-  return `You are roleplaying as ${character.name}.${character.universe ? ` From: ${character.universe}.` : ''}
+  // Get the summary of the best match
+  const bestTitle = results[0].title;
+  const summaryUrl = `https://${wikiLang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(bestTitle)}`;
+  const summaryRes = await fetch(summaryUrl);
+  if (!summaryRes.ok) throw new Error('Wiki summary failed');
+  const summary = await summaryRes.json();
 
-Character description: ${character.description || '(no description provided)'}
+  return {
+    title: summary.title,
+    description: summary.description || '',
+    extract: summary.extract || '',
+    thumbnail: summary.thumbnail?.source || null,
+    contentUrls: summary.content_urls,
+  };
+}
 
-Personality traits: ${traitLabels.join(', ') || '(default)'}
-Speech style: ${character.speech || '(natural)'}
+// ===================== MAGIC: GENERATE WITH AI =====================
+async function generateWithAI() {
+  if (isGenerating) return;
+  const input = document.getElementById('magicInput');
+  const query = input.value.trim();
+  if (!query) {
+    input.focus();
+    return;
+  }
 
-CRITICAL RULES:
-1. ALWAYS stay in character — never break the fourth wall, never mention you're an AI
-2. Respond in ${langName}
-3. Use the character's speech style and personality in every response
-4. Keep responses concise (1-3 short paragraphs max) unless asked for detail
-5. If the user says something out of character, react as the character would
-6. Don't be overly helpful or AI-like — be the character
-7. Use *actions* in italics for body language when natural (e.g., *smiles*, *raises eyebrow*)
-8. Don't introduce yourself every message — assume the user knows who you are after the first greeting`;
+  isGenerating = true;
+  const btn = document.getElementById('magicBtn');
+  const status = document.getElementById('magicStatus');
+  const statusText = document.getElementById('magicStatusText');
+  btn.disabled = true;
+  status.classList.add('show');
+  statusText.textContent = t('magic-step-wiki');
+
+  try {
+    // Step 1: Search Wikipedia
+    const wiki = await searchWikipedia(query);
+
+    statusText.textContent = t('magic-step-ai');
+
+    // Step 2: Generate enriched character with AI
+    const lang = document.documentElement.lang || 'pt-BR';
+    const langName = { 'pt-BR': 'Portuguese (Brazil)', en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', ja: 'Japanese', 'zh-CN': 'Chinese (Simplified)' }[lang] || 'English';
+
+    const wikiContext = wiki ? `
+Wikipedia info:
+- Title: ${wiki.title}
+- Description: ${wiki.description}
+- Extract: ${wiki.extract.slice(0, 1000)}` : '(no Wikipedia match found — generate based on the name alone)`;
+
+    const aiPrompt = `Generate a character profile in JSON format based on this query: "${query}".
+${wikiContext}
+
+Respond ONLY with this JSON (no markdown, no code fences):
+{
+  "name": "character name (clean, without disambiguation)",
+  "universe": "origin/universe (e.g.: Dragon Ball, Real Life, DC Comics, Star Wars)",
+  "description": "3-4 sentence description of who they are and their main traits",
+  "traits": ["3 trait IDs from this list: ${TRAITS.map(t => t.id).join(', ')}"],
+  "speech": "1 sentence describing how they speak (accent, slang, expressions)",
+  "greeting": "1 short greeting the character would say (in character, in ${langName})"
+}
+
+Respond in ${langName}. Use only trait IDs from the list. If you can't find 3 matching traits, use the closest ones.`;
+
+    const aiResponse = await callAI([
+      { role: 'system', content: 'You are a character researcher. Always respond with valid JSON only.' },
+      { role: 'user', content: aiPrompt },
+    ], 800);
+
+    // Parse JSON
+    let cleaned = aiResponse.replace(/^```json?\s*|\s*```$/g, '').trim();
+    const profile = JSON.parse(cleaned);
+
+    // Fill the form
+    document.getElementById('charName').value = profile.name || query;
+    document.getElementById('charUniverse').value = profile.universe || '';
+    document.getElementById('charDesc').value = profile.description || (wiki?.extract || '');
+    document.getElementById('charSpeech').value = profile.speech || '';
+    document.getElementById('charGreeting').value = profile.greeting || '';
+
+    // Select traits
+    selectedTraits = (profile.traits || []).filter(id => TRAITS.some(t => t.id === id));
+    renderTraits();
+
+    // Store wiki thumbnail for later use as avatar
+    window._generatedThumbnail = wiki?.thumbnail || null;
+
+    statusText.textContent = t('magic-success');
+    setTimeout(() => status.classList.remove('show'), 3000);
+
+    // Scroll to form
+    document.querySelector('.divider').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (err) {
+    console.error('Generate failed:', err);
+    statusText.textContent = t('magic-fail');
+    setTimeout(() => status.classList.remove('show'), 4000);
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+  }
 }
 
 // ===================== NAVIGATION =====================
@@ -955,13 +1277,13 @@ function showCreate() {
   document.getElementById('homeScreen').style.display = 'none';
   document.getElementById('createScreen').style.display = 'flex';
   document.getElementById('chatScreen').style.display = 'none';
-  // Reset form
-  ['charName', 'charUniverse', 'charDesc', 'charSpeech', 'charGreeting'].forEach(id => {
+  ['charName', 'charUniverse', 'charDesc', 'charSpeech', 'charGreeting', 'magicInput'].forEach(id => {
     document.getElementById(id).value = '';
   });
   selectedTraits = [];
+  window._generatedThumbnail = null;
   renderTraits();
-  setTimeout(() => document.getElementById('charName').focus(), 100);
+  setTimeout(() => document.getElementById('magicInput').focus(), 100);
 }
 
 function renderTraits() {
@@ -993,24 +1315,39 @@ function renderFeatured() {
     card.className = 'featured-card';
     card.innerHTML = `
       <div class="featured-avatar">${char.icon}</div>
-      <h3>${char.name}</h3>
-      <p>${char.universe}</p>
+      <div>
+        <h3>${char.name}</h3>
+        <p>${char.universe}</p>
+      </div>
     `;
     card.onclick = () => loadFeatured(char);
     grid.appendChild(card);
   });
 }
 
-function loadFeatured(char) {
+async function loadFeatured(char) {
+  // Try to fetch thumbnail from Wikipedia
   character = {
     name: char.name,
     universe: char.universe,
     icon: char.icon,
+    thumbnail: null,
     description: char.desc,
     traits: char.traits,
     speech: char.speech,
     greeting: '',
   };
+
+  // Try to get wiki thumbnail in background
+  try {
+    const wiki = await searchWikipedia(char.wikiPage || char.name);
+    if (wiki?.thumbnail) {
+      character.thumbnail = wiki.thumbnail;
+    }
+  } catch (e) {
+    // ignore — use icon
+  }
+
   startChat();
 }
 
@@ -1024,6 +1361,7 @@ function createCharacter() {
     name,
     universe: document.getElementById('charUniverse').value.trim(),
     icon: '🤖',
+    thumbnail: window._generatedThumbnail || null,
     description: document.getElementById('charDesc').value.trim(),
     traits: [...selectedTraits],
     speech: document.getElementById('charSpeech').value.trim(),
@@ -1040,11 +1378,17 @@ function startChat() {
 
   document.getElementById('chatName').textContent = character.name;
   document.getElementById('chatUniverse').textContent = character.universe || '—';
-  document.getElementById('chatAvatar').textContent = character.icon || '🤖';
+
+  // Avatar: prefer thumbnail, fall back to icon
+  const avatarEl = document.getElementById('chatAvatar');
+  if (character.thumbnail) {
+    avatarEl.innerHTML = `<img src="${character.thumbnail}" alt="${character.name}" referrerpolicy="no-referrer">`;
+  } else {
+    avatarEl.textContent = character.icon || '🤖';
+  }
 
   document.getElementById('chatMessages').innerHTML = '';
 
-  // Add greeting
   const greeting = character.greeting || t('default-greeting', { name: character.name });
   addMessage('character', greeting);
 }
@@ -1059,7 +1403,13 @@ function addMessage(role, content) {
 
   const avatar = document.createElement('div');
   avatar.className = 'msg-avatar';
-  avatar.textContent = role === 'user' ? '🧑' : (character.icon || '🤖');
+  if (role === 'user') {
+    avatar.textContent = '🧑';
+  } else if (character.thumbnail) {
+    avatar.innerHTML = `<img src="${character.thumbnail}" alt="${character.name}" referrerpolicy="no-referrer">`;
+  } else {
+    avatar.textContent = character.icon || '🤖';
+  }
 
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
@@ -1073,11 +1423,8 @@ function addMessage(role, content) {
 
 function formatMarkdown(text) {
   let html = escapeHtml(text);
-  // Italic *text* (also handles *action*)
   html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  // Bold **text**
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  // Line breaks
   html = html.replace(/\n/g, '<br>');
   return html;
 }
@@ -1092,7 +1439,7 @@ function showTyping() {
   msg.className = 'message character';
   msg.id = 'typingIndicator';
   msg.innerHTML = `
-    <div class="msg-avatar">${character.icon || '🤖'}</div>
+    <div class="msg-avatar">${character.thumbnail ? `<img src="${character.thumbnail}" alt="${character.name}" referrerpolicy="no-referrer">` : (character.icon || '🤖')}</div>
     <div class="msg-bubble">
       <div class="typing"><span></span><span></span><span></span></div>
     </div>
@@ -1142,6 +1489,33 @@ async function sendMessage(text) {
   }
 }
 
+function buildSystemPrompt() {
+  const lang = document.documentElement.lang || 'pt-BR';
+  const langName = { 'pt-BR': 'Portuguese (Brazil)', en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', ja: 'Japanese', 'zh-CN': 'Chinese (Simplified)' }[lang] || 'English';
+
+  const traitLabels = character.traits.map(id => {
+    const trait = TRAITS.find(t => t.id === id);
+    return trait ? trait.label[lang] || trait.label.en : id;
+  });
+
+  return `You are roleplaying as ${character.name}.${character.universe ? ` From: ${character.universe}.` : ''}
+
+Character description: ${character.description || '(no description provided)'}
+
+Personality traits: ${traitLabels.join(', ') || '(default)'}
+Speech style: ${character.speech || '(natural)'}
+
+CRITICAL RULES:
+1. ALWAYS stay in character — never break the fourth wall, never mention you're an AI
+2. Respond in ${langName}
+3. Use the character's speech style and personality in every response
+4. Keep responses concise (1-3 short paragraphs max) unless asked for detail
+5. If the user says something out of character, react as the character would
+6. Don't be overly helpful or AI-like — be the character
+7. Use *actions* in italics for body language when natural (e.g., *smiles*, *raises eyebrow*)
+8. Don't introduce yourself every message — assume the user knows who you are after the first greeting`;
+}
+
 function handleChatKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -1170,7 +1544,11 @@ function showCharacterModal() {
     return trait ? trait.label[lang] || trait.label.en : id;
   });
 
-  document.getElementById('modalTitle').innerHTML = `${character.icon || '🤖'} ${character.name}`;
+  const avatarHtml = character.thumbnail
+    ? `<img src="${character.thumbnail}" alt="${character.name}" referrerpolicy="no-referrer">`
+    : (character.icon || '🤖');
+
+  document.getElementById('modalTitle').innerHTML = `<div class="modal-avatar">${avatarHtml}</div> ${character.name}`;
   document.getElementById('modalBody').innerHTML = `
     ${character.universe ? `
       <div class="modal-detail">
@@ -1222,6 +1600,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('langSelect').addEventListener('change', (e) => {
     localStorage.setItem('soulchat-lang', e.target.value);
     applyLang(e.target.value);
+  });
+
+  // Enter key on magic input triggers generate
+  document.getElementById('magicInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      generateWithAI();
+    }
   });
 });
 </script>
