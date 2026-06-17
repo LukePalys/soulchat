@@ -1207,11 +1207,12 @@ async function generateWithAI() {
     const lang = document.documentElement.lang || 'pt-BR';
     const langName = { 'pt-BR': 'Portuguese (Brazil)', en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', ja: 'Japanese', 'zh-CN': 'Chinese (Simplified)' }[lang] || 'English';
 
-    const wikiContext = wiki ? `
-Wikipedia info:
+    const wikiContext = wiki
+      ? `Wikipedia info:
 - Title: ${wiki.title}
 - Description: ${wiki.description}
-- Extract: ${wiki.extract.slice(0, 1000)}` : '(no Wikipedia match found — generate based on the name alone)`;
+- Extract: ${wiki.extract.slice(0, 1000)}`
+      : '(no Wikipedia match found - generate based on the name alone)';
 
     const aiPrompt = `Generate a character profile in JSON format based on this query: "${query}".
 ${wikiContext}
