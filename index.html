@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoulChat — Converse com qualquer personagem</title>
+<meta name="description" content="Crie e converse com personagens de IA. Goku, Naruto, Batman, Sherlock Holmes ou qualquer um que você imaginar. Personalidade, tom de voz e histórico.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg-0: #0a0a0f;
+    --bg-1: #13131a;
+    --bg-2: #1a1a24;
+    --bg-3: #232333;
+    --border: #2a2a3a;
+    --text: #e4e4ef;
+    --text-dim: #8888a0;
+    --accent: #a855f7;
+    --accent-2: #ec4899;
+    --accent-3: #06b6d4;
+    --success: #10b981;
+    --error: #ef4444;
+  }
+  html { color-scheme: dark; }
+  body {
+    margin: 0;
+    background: var(--bg-0);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 0%, rgba(168, 85, 247, 0.15), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 0% 100%, rgba(6, 182, 212, 0.1), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 64px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .logo-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 10px 30px -8px var(--accent);
+  }
+  .logo h1 {
+    margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .logo p { margin: 0; font-size: 12px; color: var(--text-dim); }
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+  select.lang-select {
+    padding: 8px 30px 8px 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238888a0'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 8px center / 16px;
+    color: var(--text); border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-family: inherit; appearance: none;
+  }
+  .btn {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-2); color: var(--text);
+    border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .btn:hover { background: var(--bg-3); border-color: var(--accent); color: var(--accent); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none; color: white;
+  }
+  .btn-primary:hover { color: white; box-shadow: 0 8px 24px -8px var(--accent); }
+  .btn-icon { padding: 8px; width: 36px; height: 36px; justify-content: center; }
+
+  /* Welcome / Home */
+  .home {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .home-icon {
+    font-size: 72px;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .home h2 {
+    font-size: 36px;
+    margin: 0 0 12px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--text), var(--accent));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .home > p {
+    color: var(--text-dim);
+    font-size: 17px;
+    max-width: 580px;
+    margin: 0 0 32px;
+    line-height: 1.6;
+  }
+  .btn-cta {
+    padding: 16px 36px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 30px -8px var(--accent);
+    transition: all 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -8px var(--accent); }
+
+  /* Featured characters */
+  .featured-section {
+    margin-top: 48px;
+    max-width: 900px;
+    width: 100%;
+  }
+  .featured-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .featured-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .featured-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px var(--accent);
+  }
+  .featured-avatar {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .featured-card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .featured-card p { margin: 0; font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+  /* Create character */
+  .create-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  .create-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 640px;
+    width: 100%;
+    box-shadow: 0 20px 60px -20px rgba(168, 85, 247, 0.4);
+  }
+  .create-title { font-size: 24px; font-weight: 700; margin: 0 0 8px; }
+  .create-sub { color: var(--text-dim); margin: 0 0 24px; font-size: 14px; }
+
+  .input-group { margin-bottom: 18px; }
+  .input-group label {
+    display: block; margin-bottom: 6px;
+    font-size: 13px; font-weight: 500; color: var(--text-dim);
+  }
+  .input-group input, .input-group textarea, .input-group select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-2); color: var(--text);
+    border-radius: 10px;
+    font-family: inherit; font-size: 14px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .input-group input:focus, .input-group textarea:focus, .input-group select:focus { border-color: var(--accent); }
+  .input-group textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .traits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+  }
+  .trait-chip {
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-size: 13px;
+  }
+  .trait-chip:hover { border-color: var(--accent); }
+  .trait-chip.selected {
+    border-color: var(--accent);
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--accent);
+  }
+
+  /* Chat */
+  .chat-layout { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .chat-header {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .chat-info { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .chat-info-avatar {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .chat-info h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .chat-info p { margin: 0; font-size: 12px; color: var(--text-dim); }
+
+  .chat-messages {
+    flex: 1;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    overflow-y: auto;
+    min-height: 360px;
+    max-height: 60vh;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .message { display: flex; gap: 10px; max-width: 85%; }
+  .message.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .message.user .msg-avatar { background: var(--bg-3); }
+  .message.character .msg-avatar {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+  .msg-bubble {
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+  }
+  .message.user .msg-bubble {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    border: none;
+    border-bottom-right-radius: 4px;
+  }
+  .message.character .msg-bubble { border-bottom-left-radius: 4px; }
+  .msg-bubble em { color: var(--text-dim); }
+  .msg-bubble strong { color: var(--accent-3); }
+
+  .typing {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+  }
+  .typing span {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: typing 1.4s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  .chat-input-area {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .chat-input-area textarea {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    padding: 8px;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.5;
+  }
+  .send-btn {
+    width: 40px; height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .send-btn:hover { transform: scale(1.05); }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Modal for character details */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal h3 { margin: 0 0 16px; font-size: 20px; }
+  .modal-detail { margin-bottom: 14px; }
+  .modal-detail-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .modal-detail-value { font-size: 14px; line-height: 1.5; }
+  .modal-close {
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    padding: 12px 20px;
+    background: var(--bg-3);
+    color: var(--text);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  footer {
+    text-align: center;
+    margin-top: 32px;
+    padding: 20px;
+    color: var(--text-dim);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    .container { padding: 16px 12px 48px; }
+    .home h2 { font-size: 28px; }
+    .home > p { font-size: 15px; }
+    .create-card { padding: 24px; }
+    .create-title { font-size: 20px; }
+    .chat-messages { padding: 14px; min-height: 280px; }
+    .msg-bubble { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo" onclick="goHome()">
+      <div class="logo-icon">💬</div>
+      <div>
+        <h1>SoulChat</h1>
+        <p data-i18n="tagline">Converse com qualquer personagem</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <select class="lang-select" id="langSelect">
+        <option value="pt-BR">🇧🇷 PT-BR</option>
+        <option value="en">🇺🇸 EN</option>
+        <option value="es">🇪🇸 ES</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="de">🇩🇪 DE</option>
+        <option value="it">🇮🇹 IT</option>
+        <option value="ja">🇯🇵 JP</option>
+        <option value="zh-CN">🇨🇳 ZH</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Home / Welcome -->
+  <div class="home" id="homeScreen">
+    <div class="home-icon">💬</div>
+    <h2 data-i18n="home-title">Converse com qualquer personagem</h2>
+    <p data-i18n="home-desc">
+      Crie personagens de IA com personalidade, tom de voz e história.
+      Converse com Goku, Sherlock Holmes, Batman, sua avó falecida ou
+      qualquer um que você imaginar. A IA dá vida à personalidade.
+    </p>
+    <button class="btn-cta" onclick="showCreate()">
+      <span data-i18n="create-btn">✨ Criar personagem</span>
+      <span>→</span>
+    </button>
+
+    <div class="featured-section">
+      <div class="featured-title" data-i18n="featured">Personagens sugeridos</div>
+      <div class="featured-grid" id="featuredGrid"></div>
+    </div>
+  </div>
+
+  <!-- Create character -->
+  <div class="create-screen" id="createScreen" style="display:none;">
+    <div class="create-card">
+      <h2 class="create-title" data-i18n="create-title">Criar personagem</h2>
+      <p class="create-sub" data-i18n="create-sub">Descreva o personagem e a IA dá vida à personalidade.</p>
+
+      <div class="input-group">
+        <label data-i18n="name-label">Nome do personagem</label>
+        <input type="text" id="charName" data-i18n-ph="name-ph" placeholder="Ex.: Goku, Sherlock Holmes, Einstein...">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="universe-label">Universo / Origem (opcional)</label>
+        <input type="text" id="charUniverse" data-i18n-ph="universe-ph" placeholder="Ex.: Dragon Ball, BBC Sherlock, história...">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="desc-label">Descrição / História</label>
+        <textarea id="charDesc" data-i18n-ph="desc-ph" placeholder="Descreva o personagem: quem é, o que faz, principais características..."></textarea>
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="traits-label">Personalidade (clique pra selecionar)</label>
+        <div class="traits-grid" id="traitsGrid"></div>
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="speech-label">Como ele fala? (opcional)</label>
+        <input type="text" id="charSpeech" data-i18n-ph="speech-ph" placeholder="Ex.: sotaque, gírias, expressões típicas...">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="greeting-label">Primeira mensagem do personagem (opcional)</label>
+        <input type="text" id="charGreeting" data-i18n-ph="greeting-ph" placeholder="Ex.: 'E aí, querido! Como posso te ajudar?'">
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:24px;">
+        <button class="btn" onclick="goHome()" data-i18n="cancel">Cancelar</button>
+        <button class="btn btn-primary" onclick="createCharacter()" style="flex:1;" data-i18n="start-chat">Iniciar conversa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-layout" id="chatScreen" style="display:none;">
+    <div class="chat-header">
+      <div class="chat-info" onclick="showCharacterModal()">
+        <div class="chat-info-avatar" id="chatAvatar">🤖</div>
+        <div>
+          <h3 id="chatName">—</h3>
+          <p id="chatUniverse">—</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-icon" onclick="clearChat()" title="Clear">🗑️</button>
+        <button class="btn btn-icon" onclick="goHome()" title="Back">←</button>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages"></div>
+
+    <div class="chat-input-area">
+      <textarea id="chatInput" data-i18n-ph="chat-ph" placeholder="Mande mensagem..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+    </div>
+  </div>
+
+  <footer>
+    <span data-i18n="footer-made">Feito com</span> 💜 <span data-i18n="footer-by">por</span> <a href="https://github.com/lukepalys" target="_blank" rel="noopener">LukePalys</a> • <span data-i18n="footer-tech">Pollinations AI · 100% no navegador</span>
+  </footer>
+</div>
+
+<!-- Character modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal">
+    <h3 id="modalTitle">—</h3>
+    <div id="modalBody"></div>
+    <button class="btn modal-close" onclick="closeModal()" data-i18n="close">Fechar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== I18N =====================
+const I18N = {
+  'pt-BR': {
+    tagline: 'Converse com qualquer personagem',
+    'home-title': 'Converse com qualquer personagem',
+    'home-desc': 'Crie personagens de IA com personalidade, tom de voz e história. Converse com Goku, Sherlock Holmes, Batman, sua avó falecida ou qualquer um que você imaginar. A IA dá vida à personalidade.',
+    'create-btn': '✨ Criar personagem',
+    featured: 'Personagens sugeridos',
+    'create-title': 'Criar personagem',
+    'create-sub': 'Descreva o personagem e a IA dá vida à personalidade.',
+    'name-label': 'Nome do personagem',
+    'name-ph': 'Ex.: Goku, Sherlock Holmes, Einstein...',
+    'universe-label': 'Universo / Origem (opcional)',
+    'universe-ph': 'Ex.: Dragon Ball, BBC Sherlock, história...',
+    'desc-label': 'Descrição / História',
+    'desc-ph': 'Descreva o personagem: quem é, o que faz, principais características...',
+    'traits-label': 'Personalidade (clique pra selecionar)',
+    'speech-label': 'Como ele fala? (opcional)',
+    'speech-ph': 'Ex.: sotaque, gírias, expressões típicas...',
+    'greeting-label': 'Primeira mensagem do personagem (opcional)',
+    'greeting-ph': "Ex.: 'E aí, querido! Como posso te ajudar?'",
+    cancel: 'Cancelar',
+    'start-chat': 'Iniciar conversa',
+    'chat-ph': 'Mande mensagem...',
+    'footer-made': 'Feito com',
+    'footer-by': 'por',
+    'footer-tech': 'Pollinations AI · 100% no navegador',
+    close: 'Fechar',
+    'need-name': 'Digite o nome do personagem 🙂',
+    'failed': 'Tive um problema pra responder. Tenta de novo.',
+    'clear-confirm': 'Apagar toda a conversa?',
+    'default-greeting': 'Oi! Sou {name}. Sobre o que você quer conversar?',
+  },
+  en: {
+    tagline: 'Chat with any character',
+    'home-title': 'Chat with any character',
+    'home-desc': 'Create AI characters with personality, voice and backstory. Chat with Goku, Sherlock Holmes, Batman, your late grandmother or anyone you imagine. The AI brings the personality to life.',
+    'create-btn': '✨ Create character',
+    featured: 'Suggested characters',
+    'create-title': 'Create character',
+    'create-sub': 'Describe the character and the AI brings their personality to life.',
+    'name-label': 'Character name',
+    'name-ph': 'E.g.: Goku, Sherlock Holmes, Einstein...',
+    'universe-label': 'Universe / Origin (optional)',
+    'universe-ph': 'E.g.: Dragon Ball, BBC Sherlock, history...',
+    'desc-label': 'Description / Background',
+    'desc-ph': 'Describe the character: who they are, what they do, main traits...',
+    'traits-label': 'Personality (click to select)',
+    'speech-label': 'How do they speak? (optional)',
+    'speech-ph': 'E.g.: accent, slang, typical expressions...',
+    'greeting-label': 'Character\'s first message (optional)',
+    'greeting-ph': "E.g.: 'Hey there! How can I help you?'",
+    cancel: 'Cancel',
+    'start-chat': 'Start chatting',
+    'chat-ph': 'Send message...',
+    'footer-made': 'Made with',
+    'footer-by': 'by',
+    'footer-tech': 'Pollinations AI · 100% in browser',
+    close: 'Close',
+    'need-name': 'Type the character name 🙂',
+    'failed': 'I had trouble responding. Try again.',
+    'clear-confirm': 'Erase the entire conversation?',
+    'default-greeting': 'Hi! I\'m {name}. What do you want to talk about?',
+  },
+  es: {
+    tagline: 'Chatea con cualquier personaje',
+    'home-title': 'Chatea con cualquier personaje',
+    'home-desc': 'Crea personajes de IA con personalidad, voz e historia. Chatea con Goku, Sherlock Holmes, Batman, tu abuela fallecida o cualquier persona que imagines. La IA da vida a la personalidad.',
+    'create-btn': '✨ Crear personaje',
+    featured: 'Personajes sugeridos',
+    'create-title': 'Crear personaje',
+    'create-sub': 'Describe el personaje y la IA da vida a su personalidad.',
+    'name-label': 'Nombre del personaje',
+    'name-ph': 'Ej.: Goku, Sherlock Holmes, Einstein...',
+    'universe-label': 'Universo / Origen (opcional)',
+    'universe-ph': 'Ej.: Dragon Ball, BBC Sherlock, historia...',
+    'desc-label': 'Descripción / Historia',
+    'desc-ph': 'Describe al personaje: quién es, qué hace, características principales...',
+    'traits-label': 'Personalidad (clic para seleccionar)',
+    'speech-label': '¿Cómo habla? (opcional)',
+    'speech-ph': 'Ej.: acento, jerga, expresiones típicas...',
+    'greeting-label': 'Primer mensaje del personaje (opcional)',
+    'greeting-ph': "Ej.: '¡Hola! ¿Cómo puedo ayudarte?'",
+    cancel: 'Cancelar',
+    'start-chat': 'Iniciar conversación',
+    'chat-ph': 'Enviar mensaje...',
+    'footer-made': 'Hecho con',
+    'footer-by': 'por',
+    'footer-tech': 'Pollinations AI · 100% en el navegador',
+    close: 'Cerrar',
+    'need-name': 'Escribe el nombre del personaje 🙂',
+    'failed': 'Tuve un problema al responder. Intenta de nuevo.',
+    'clear-confirm': '¿Borrar toda la conversación?',
+    'default-greeting': '¡Hola! Soy {name}. ¿De qué quieres hablar?',
+  },
+  fr: {
+    tagline: 'Discutez avec n\'importe quel personnage',
+    'home-title': 'Discutez avec n\'importe quel personnage',
+    'home-desc': 'Créez des personnages IA avec personnalité, voix et histoire. Discutez avec Goku, Sherlock Holmes, Batman, votre grand-mère disparue ou quiconque vous imaginez. L\'IA donne vie à la personnalité.',
+    'create-btn': '✨ Créer un personnage',
+    featured: 'Personnages suggérés',
+    'create-title': 'Créer un personnage',
+    'create-sub': 'Décrivez le personnage et l\'IA donne vie à sa personnalité.',
+    'name-label': 'Nom du personnage',
+    'name-ph': 'Ex. : Goku, Sherlock Holmes, Einstein...',
+    'universe-label': 'Univers / Origine (facultatif)',
+    'universe-ph': 'Ex. : Dragon Ball, BBC Sherlock, histoire...',
+    'desc-label': 'Description / Histoire',
+    'desc-ph': 'Décrivez le personnage : qui il est, ce qu\'il fait, traits principaux...',
+    'traits-label': 'Personnalité (cliquez pour sélectionner)',
+    'speech-label': 'Comment parle-t-il ? (facultatif)',
+    'speech-ph': 'Ex. : accent, argot, expressions typiques...',
+    'greeting-label': 'Premier message du personnage (facultatif)',
+    'greeting-ph': "Ex. : 'Salut ! Comment puis-je t\'aider ?'",
+    cancel: 'Annuler',
+    'start-chat': 'Commencer la conversation',
+    'chat-ph': 'Envoyer un message...',
+    'footer-made': 'Fait avec',
+    'footer-by': 'par',
+    'footer-tech': 'Pollinations AI · 100% navigateur',
+    close: 'Fermer',
+    'need-name': 'Tapez le nom du personnage 🙂',
+    'failed': 'Problème de réponse. Réessayez.',
+    'clear-confirm': 'Effacer toute la conversation ?',
+    'default-greeting': 'Salut ! Je suis {name}. De quoi veux-tu parler ?',
+  },
+  de: {
+    tagline: 'Chatte mit jedem Charakter',
+    'home-title': 'Chatte mit jedem Charakter',
+    'home-desc': 'Erstelle KI-Charaktere mit Persönlichkeit, Stimme und Hintergrund. Chatte mit Goku, Sherlock Holmes, Batman, deiner verstorbenen Oma oder jedem, den du dir vorstellen kannst. Die KI erweckt die Persönlichkeit zum Leben.',
+    'create-btn': '✨ Charakter erstellen',
+    featured: 'Vorgeschlagene Charaktere',
+    'create-title': 'Charakter erstellen',
+    'create-sub': 'Beschreibe den Charakter und die KI erweckt die Persönlichkeit zum Leben.',
+    'name-label': 'Charaktername',
+    'name-ph': 'z.B.: Goku, Sherlock Holmes, Einstein...',
+    'universe-label': 'Universum / Herkunft (optional)',
+    'universe-ph': 'z.B.: Dragon Ball, BBC Sherlock, Geschichte...',
+    'desc-label': 'Beschreibung / Hintergrund',
+    'desc-ph': 'Beschreibe den Charakter: wer, was, Haupteigenschaften...',
+    'traits-label': 'Persönlichkeit (klicken zum Auswählen)',
+    'speech-label': 'Wie spricht er/sie? (optional)',
+    'speech-ph': 'z.B.: Akzent, Slang, typische Ausdrücke...',
+    'greeting-label': 'Erste Nachricht des Charakters (optional)',
+    'greeting-ph': "z.B.: 'Hey! Wie kann ich helfen?'",
+    cancel: 'Abbrechen',
+    'start-chat': 'Chat starten',
+    'chat-ph': 'Nachricht senden...',
+    'footer-made': 'Gemacht mit',
+    'footer-by': 'von',
+    'footer-tech': 'Pollinations AI · 100% im Browser',
+    close: 'Schließen',
+    'need-name': 'Charakternamen eingeben 🙂',
+    'failed': 'Antwortproblem. Erneut versuchen.',
+    'clear-confirm': 'Den gesamten Chat löschen?',
+    'default-greeting': 'Hi! Ich bin {name}. Worüber willst du sprechen?',
+  },
+  it: {
+    tagline: 'Chatta con qualsiasi personaggio',
+    'home-title': 'Chatta con qualsiasi personaggio',
+    'home-desc': 'Crea personaggi IA con personalità, voce e storia. Chatta con Goku, Sherlock Holmes, Batman, tua nonna scomparsa o chiunque tu immagini. L\'IA dà vita alla personalità.',
+    'create-btn': '✨ Crea personaggio',
+    featured: 'Personaggi suggeriti',
+    'create-title': 'Crea personaggio',
+    'create-sub': 'Descrivi il personaggio e l\'IA dà vita alla personalità.',
+    'name-label': 'Nome del personaggio',
+    'name-ph': 'Es.: Goku, Sherlock Holmes, Einstein...',
+    'universe-label': 'Universo / Origine (facoltativo)',
+    'universe-ph': 'Es.: Dragon Ball, BBC Sherlock, storia...',
+    'desc-label': 'Descrizione / Storia',
+    'desc-ph': 'Descrivi il personaggio: chi è, cosa fa, caratteristiche principali...',
+    'traits-label': 'Personalità (clicca per selezionare)',
+    'speech-label': 'Come parla? (facoltativo)',
+    'speech-ph': 'Es.: accento, gergo, espressioni tipiche...',
+    'greeting-label': 'Primo messaggio del personaggio (facoltativo)',
+    'greeting-ph': "Es.: 'Ciao! Come posso aiutarti?'",
+    cancel: 'Annulla',
+    'start-chat': 'Inizia conversazione',
+    'chat-ph': 'Invia messaggio...',
+    'footer-made': 'Fatto con',
+    'footer-by': 'da',
+    'footer-tech': 'Pollinations AI · 100% nel browser',
+    close: 'Chiudi',
+    'need-name': 'Inserisci il nome del personaggio 🙂',
+    'failed': 'Problema nella risposta. Riprova.',
+    'clear-confirm': 'Cancellare tutta la conversazione?',
+    'default-greeting': 'Ciao! Sono {name}. Di cosa vuoi parlare?',
+  },
+  ja: {
+    tagline: 'どんなキャラクターとでも会話',
+    'home-title': 'どんなキャラクターとでも会話',
+    'home-desc': '個性、声、背景を持つAIキャラクターを作成。孫悟空、シャーロック・ホームズ、バットマン、亡きおばあちゃん、想像できる誰とでも会話できます。AIが性格に命を吹き込みます。',
+    'create-btn': '✨ キャラクター作成',
+    featured: 'おすすめキャラクター',
+    'create-title': 'キャラクター作成',
+    'create-sub': 'キャラクターを説明すると、AIが性格に命を吹き込みます。',
+    'name-label': 'キャラクター名',
+    'name-ph': '例：孫悟空、シャーロック・ホームズ、アインシュタイン...',
+    'universe-label': 'ユニバース / 起点（任意）',
+    'universe-ph': '例：ドラゴンボール、BBCシャーロック、歴史...',
+    'desc-label': '説明 / 背景',
+    'desc-ph': 'キャラクターを説明：誰か、何をするか、主な特徴...',
+    'traits-label': '性格（クリックして選択）',
+    'speech-label': '話し方は？（任意）',
+    'speech-ph': '例：アクセント、スラング、典型的な表現...',
+    'greeting-label': 'キャラクターの最初のメッセージ（任意）',
+    'greeting-ph': "例：'やあ！どうしたの？'",
+    cancel: 'キャンセル',
+    'start-chat': '会話開始',
+    'chat-ph': 'メッセージ送信...',
+    'footer-made': '作成:',
+    'footer-by': '',
+    'footer-tech': 'Pollinations AI · 100%ブラウザ内',
+    close: '閉じる',
+    'need-name': 'キャラクター名を入力してください 🙂',
+    'failed': '応答に問題が発生しました。再試行してください。',
+    'clear-confirm': '会話をすべて消去しますか？',
+    'default-greeting': 'やあ！{name}だよ。何について話そうか？',
+  },
+  'zh-CN': {
+    tagline: '与任何角色聊天',
+    'home-title': '与任何角色聊天',
+    'home-desc': '创建具有个性、声音和背景的 AI 角色。与孙悟空、夏洛克·福尔摩斯、蝙蝠侠、已故的祖母或任何您想象的人聊天。AI 赋予角色生命。',
+    'create-btn': '✨ 创建角色',
+    featured: '推荐角色',
+    'create-title': '创建角色',
+    'create-sub': '描述角色，AI 赋予个性生命。',
+    'name-label': '角色名称',
+    'name-ph': '例如：孙悟空、夏洛克·福尔摩斯、爱因斯坦...',
+    'universe-label': '宇宙 / 出处（可选）',
+    'universe-ph': '例如：龙珠、BBC 夏洛克、历史...',
+    'desc-label': '描述 / 背景',
+    'desc-ph': '描述角色：是谁、做什么、主要特征...',
+    'traits-label': '性格（点击选择）',
+    'speech-label': '怎么说？（可选）',
+    'speech-ph': '例如：口音、俚语、典型表达...',
+    'greeting-label': '角色的第一条消息（可选）',
+    'greeting-ph': "例如：'嘿！我能帮你吗？'",
+    cancel: '取消',
+    'start-chat': '开始聊天',
+    'chat-ph': '发送消息...',
+    'footer-made': '用',
+    'footer-by': '由',
+    'footer-tech': 'Pollinations AI · 100% 浏览器内',
+    close: '关闭',
+    'need-name': '请输入角色名称 🙂',
+    'failed': '回复出错了。请重试。',
+    'clear-confirm': '清除整个对话？',
+    'default-greeting': '嗨！我是 {name}。你想聊什么？',
+  }
+};
+
+function t(key, vars) {
+  const lang = document.documentElement.lang || 'pt-BR';
+  let str = (I18N[lang] && I18N[lang][key]) || I18N['en'][key] || key;
+  if (vars) {
+    Object.keys(vars).forEach(k => {
+      str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), vars[k]);
+    });
+  }
+  return str;
+}
+
+function applyLang(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.setAttribute('data-lang', lang);
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    el.placeholder = t(key);
+  });
+  document.title = 'SoulChat — ' + t('tagline');
+  renderFeatured();
+  renderTraits();
+}
+
+// ===================== STATE =====================
+const TRAITS = [
+  { id: 'calm', icon: '🧘', label: { 'pt-BR': 'Calmo', en: 'Calm', es: 'Calmo', fr: 'Calme', de: 'Ruhig', it: 'Calmo', ja: '穏やか', 'zh-CN': '平静' } },
+  { id: 'aggressive', icon: '😤', label: { 'pt-BR': 'Agressivo', en: 'Aggressive', es: 'Agresivo', fr: 'Agressif', de: 'Aggressiv', it: 'Aggressivo', ja: '攻撃的', 'zh-CN': '好斗' } },
+  { id: 'happy', icon: '😄', label: { 'pt-BR': 'Feliz', en: 'Happy', es: 'Feliz', fr: 'Heureux', de: 'Fröhlich', it: 'Felice', ja: '幸せ', 'zh-CN': '快乐' } },
+  { id: 'sarcastic', icon: '😏', label: { 'pt-BR': 'Sarcástico', en: 'Sarcastic', es: 'Sarcástico', fr: 'Sarcastique', de: 'Sarkastisch', it: 'Sarcastico', ja: '皮肉', 'zh-CN': '讽刺' } },
+  { id: 'mysterious', icon: '🕵️', label: { 'pt-BR': 'Misterioso', en: 'Mysterious', es: 'Misterioso', fr: 'Mystérieux', de: 'Mysteriös', it: 'Misterioso', ja: '神秘的', 'zh-CN': '神秘' } },
+  { id: 'charismatic', icon: '✨', label: { 'pt-BR': 'Carismático', en: 'Charismatic', es: 'Carismático', fr: 'Charismatique', de: 'Charismatisch', it: 'Carismatico', ja: 'カリスマ', 'zh-CN': '魅力' } },
+  { id: 'shy', icon: '😳', label: { 'pt-BR': 'Tímido', en: 'Shy', es: 'Tímido', fr: 'Timide', de: 'Schüchtern', it: 'Timido', ja: '内気', 'zh-CN': '害羞' } },
+  { id: 'crazy', icon: '🤪', label: { 'pt-BR': 'Crazy', en: 'Crazy', es: 'Loco', fr: 'Fou', de: 'Verrückt', it: 'Pazzo', ja: '狂気', 'zh-CN': '疯狂' } },
+  { id: 'charming', icon: '😍', label: { 'pt-BR': 'Encantador', en: 'Charming', es: 'Encantador', fr: 'Charmant', de: 'Charmant', it: 'Affascinante', ja: '魅力的', 'zh-CN': '迷人' } },
+  { id: 'cold', icon: '🧊', label: { 'pt-BR': 'Frio', en: 'Cold', es: 'Frío', fr: 'Froid', de: 'Kalt', it: 'Freddo', ja: '冷たい', 'zh-CN': '冷淡' } },
+  { id: 'gentle', icon: '🥰', label: { 'pt-BR': 'Gentil', en: 'Gentle', es: 'Amable', fr: 'Doux', de: 'Sanft', it: 'Gentile', ja: '優しい', 'zh-CN': '温柔' } },
+  { id: 'competitive', icon: '🏆', label: { 'pt-BR': 'Competitivo', en: 'Competitive', es: 'Competitivo', fr: 'Compétitif', de: 'Wettbewerbsfähig', it: 'Competitivo', ja: '競争的', 'zh-CN': '好胜' } },
+  { id: 'intellectual', icon: '🧠', label: { 'pt-BR': 'Intelectual', en: 'Intellectual', es: 'Intelectual', fr: 'Intellectuel', de: 'Intellektuell', it: 'Intellettuale', ja: '知的', 'zh-CN': '智识' } },
+  { id: 'childish', icon: '🧒', label: { 'pt-BR': 'Infantil', en: 'Childish', es: 'Infantil', fr: 'Enfantin', de: 'Kindisch', it: 'Infantile', ja: '子供っぽい', 'zh-CN': '孩子气' } },
+  { id: 'warrior', icon: '⚔️', label: { 'pt-BR': 'Guerreiro', en: 'Warrior', es: 'Guerrero', fr: 'Guerrier', de: 'Krieger', it: 'Guerriero', ja: '戦士', 'zh-CN': '战士' } },
+  { id: 'wise', icon: '🦉', label: { 'pt-BR': 'Sábio', en: 'Wise', es: 'Sabio', fr: 'Sage', de: 'Weise', it: 'Saggio', ja: '賢明', 'zh-CN': '睿智' } },
+];
+
+const FEATURED = [
+  { name: 'Goku', universe: 'Dragon Ball', icon: '🐉', desc: 'Guerreiro Saiyajin que adora lutar comer e proteger seus amigos. Sempre busca ficar mais forte.', traits: ['warrior', 'happy', 'competitive'], speech: 'Emocionado, fala de luta e comida' },
+  { name: 'Sherlock Holmes', universe: 'BBC Sherlock', icon: '🔍', desc: 'Detetive consultor de Londres. Observador brilhante, lógico e às vezes insensível.', traits: ['intellectual', 'sarcastic', 'cold'], speech: 'Rápido, lógico, às vezes arrogante' },
+  { name: 'Batman', universe: 'DC Comics', icon: '🦇', desc: 'Bruce Wayne, vigilante de Gotham. Sombrio, determinado, protetor.', traits: ['mysterious', 'warrior', 'cold'], speech: 'Sério, curto, direto' },
+  { name: 'Einstein', universe: 'História', icon: '⚗️', desc: 'Físico teórico, pai da relatividade. Curioso, criativo, gostava de pensar fora da caixa.', traits: ['intellectual', 'wise', 'gentle'], speech: 'Pensativo, usa analogias' },
+  { name: 'Fada do Dente', universe: 'Folclore', icon: '🧚', desc: 'Fada que troca dentes de leite por dinheiro enquanto crianças dormem. Mágica e brincalhona.', traits: ['charming', 'happy', 'mysterious'], speech: 'Doce, mágica, misteriosa' },
+  { name: 'Mr. Bean', universe: 'Comédia BBC', icon: '🤵', desc: 'Personagem desastrado e quieto do Rowan Atkinson. Resolve problemas de forma absurda.', traits: ['childish', 'crazy', 'shy'], speech: 'Poucas palavras, muitos sons' },
+];
+
+let character = null;
+let messages = [];
+let selectedTraits = [];
+let isThinking = false;
+
+// ===================== AI CALL =====================
+async function callAI(aiMessages) {
+  const res = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'openai-fast',
+      messages: aiMessages,
+      temperature: 0.85,
+      max_tokens: 600,
+    }),
+  });
+  if (!res.ok) throw new Error('Pollinations: ' + res.status);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+function buildSystemPrompt() {
+  const lang = document.documentElement.lang || 'pt-BR';
+  const langName = { 'pt-BR': 'Portuguese (Brazil)', en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', ja: 'Japanese', 'zh-CN': 'Chinese (Simplified)' }[lang] || 'English';
+
+  const traitLabels = character.traits.map(id => {
+    const trait = TRAITS.find(t => t.id === id);
+    return trait ? trait.label[lang] || trait.label.en : id;
+  });
+
+  return `You are roleplaying as ${character.name}.${character.universe ? ` From: ${character.universe}.` : ''}
+
+Character description: ${character.description || '(no description provided)'}
+
+Personality traits: ${traitLabels.join(', ') || '(default)'}
+Speech style: ${character.speech || '(natural)'}
+
+CRITICAL RULES:
+1. ALWAYS stay in character — never break the fourth wall, never mention you're an AI
+2. Respond in ${langName}
+3. Use the character's speech style and personality in every response
+4. Keep responses concise (1-3 short paragraphs max) unless asked for detail
+5. If the user says something out of character, react as the character would
+6. Don't be overly helpful or AI-like — be the character
+7. Use *actions* in italics for body language when natural (e.g., *smiles*, *raises eyebrow*)
+8. Don't introduce yourself every message — assume the user knows who you are after the first greeting`;
+}
+
+// ===================== NAVIGATION =====================
+function goHome() {
+  document.getElementById('homeScreen').style.display = 'flex';
+  document.getElementById('createScreen').style.display = 'none';
+  document.getElementById('chatScreen').style.display = 'none';
+}
+
+function showCreate() {
+  document.getElementById('homeScreen').style.display = 'none';
+  document.getElementById('createScreen').style.display = 'flex';
+  document.getElementById('chatScreen').style.display = 'none';
+  // Reset form
+  ['charName', 'charUniverse', 'charDesc', 'charSpeech', 'charGreeting'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  selectedTraits = [];
+  renderTraits();
+  setTimeout(() => document.getElementById('charName').focus(), 100);
+}
+
+function renderTraits() {
+  const grid = document.getElementById('traitsGrid');
+  const lang = document.documentElement.lang || 'pt-BR';
+  grid.innerHTML = '';
+  TRAITS.forEach(trait => {
+    const chip = document.createElement('div');
+    chip.className = 'trait-chip' + (selectedTraits.includes(trait.id) ? ' selected' : '');
+    chip.innerHTML = `${trait.icon} ${trait.label[lang] || trait.label.en}`;
+    chip.onclick = () => {
+      if (selectedTraits.includes(trait.id)) {
+        selectedTraits = selectedTraits.filter(t => t !== trait.id);
+      } else {
+        selectedTraits.push(trait.id);
+      }
+      renderTraits();
+    };
+    grid.appendChild(chip);
+  });
+}
+
+function renderFeatured() {
+  const grid = document.getElementById('featuredGrid');
+  const lang = document.documentElement.lang || 'pt-BR';
+  grid.innerHTML = '';
+  FEATURED.forEach(char => {
+    const card = document.createElement('div');
+    card.className = 'featured-card';
+    card.innerHTML = `
+      <div class="featured-avatar">${char.icon}</div>
+      <h3>${char.name}</h3>
+      <p>${char.universe}</p>
+    `;
+    card.onclick = () => loadFeatured(char);
+    grid.appendChild(card);
+  });
+}
+
+function loadFeatured(char) {
+  character = {
+    name: char.name,
+    universe: char.universe,
+    icon: char.icon,
+    description: char.desc,
+    traits: char.traits,
+    speech: char.speech,
+    greeting: '',
+  };
+  startChat();
+}
+
+function createCharacter() {
+  const name = document.getElementById('charName').value.trim();
+  if (!name) {
+    showToast(t('need-name'));
+    return;
+  }
+  character = {
+    name,
+    universe: document.getElementById('charUniverse').value.trim(),
+    icon: '🤖',
+    description: document.getElementById('charDesc').value.trim(),
+    traits: [...selectedTraits],
+    speech: document.getElementById('charSpeech').value.trim(),
+    greeting: document.getElementById('charGreeting').value.trim(),
+  };
+  startChat();
+}
+
+function startChat() {
+  messages = [];
+  document.getElementById('homeScreen').style.display = 'none';
+  document.getElementById('createScreen').style.display = 'none';
+  document.getElementById('chatScreen').style.display = 'flex';
+
+  document.getElementById('chatName').textContent = character.name;
+  document.getElementById('chatUniverse').textContent = character.universe || '—';
+  document.getElementById('chatAvatar').textContent = character.icon || '🤖';
+
+  document.getElementById('chatMessages').innerHTML = '';
+
+  // Add greeting
+  const greeting = character.greeting || t('default-greeting', { name: character.name });
+  addMessage('character', greeting);
+}
+
+// ===================== CHAT =====================
+function addMessage(role, content) {
+  messages.push({ role, content });
+
+  const container = document.getElementById('chatMessages');
+  const msg = document.createElement('div');
+  msg.className = 'message ' + role;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.textContent = role === 'user' ? '🧑' : (character.icon || '🤖');
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.innerHTML = formatMarkdown(content);
+
+  msg.appendChild(avatar);
+  msg.appendChild(bubble);
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatMarkdown(text) {
+  let html = escapeHtml(text);
+  // Italic *text* (also handles *action*)
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // Bold **text**
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const msg = document.createElement('div');
+  msg.className = 'message character';
+  msg.id = 'typingIndicator';
+  msg.innerHTML = `
+    <div class="msg-avatar">${character.icon || '🤖'}</div>
+    <div class="msg-bubble">
+      <div class="typing"><span></span><span></span><span></span></div>
+    </div>
+  `;
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+async function sendMessage(text) {
+  if (isThinking) return;
+  const input = document.getElementById('chatInput');
+  const message = text || input.value.trim();
+  if (!message) return;
+
+  addMessage('user', message);
+  input.value = '';
+  autoResize(input);
+
+  isThinking = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  try {
+    const aiMessages = [
+      { role: 'system', content: buildSystemPrompt() },
+      ...messages.map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content,
+      })),
+    ];
+
+    const reply = await callAI(aiMessages);
+    hideTyping();
+    addMessage('character', reply);
+  } catch (err) {
+    console.error('AI error:', err);
+    hideTyping();
+    addMessage('character', '⚠️ ' + t('failed'));
+  } finally {
+    isThinking = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+}
+
+function clearChat() {
+  if (!confirm(t('clear-confirm'))) return;
+  messages = [];
+  document.getElementById('chatMessages').innerHTML = '';
+  const greeting = character.greeting || t('default-greeting', { name: character.name });
+  addMessage('character', greeting);
+}
+
+function showCharacterModal() {
+  if (!character) return;
+  const lang = document.documentElement.lang || 'pt-BR';
+  const traitLabels = character.traits.map(id => {
+    const trait = TRAITS.find(t => t.id === id);
+    return trait ? trait.label[lang] || trait.label.en : id;
+  });
+
+  document.getElementById('modalTitle').innerHTML = `${character.icon || '🤖'} ${character.name}`;
+  document.getElementById('modalBody').innerHTML = `
+    ${character.universe ? `
+      <div class="modal-detail">
+        <div class="modal-detail-label">Universo / Origem</div>
+        <div class="modal-detail-value">${escapeHtml(character.universe)}</div>
+      </div>
+    ` : ''}
+    ${character.description ? `
+      <div class="modal-detail">
+        <div class="modal-detail-label">Descrição</div>
+        <div class="modal-detail-value">${escapeHtml(character.description)}</div>
+      </div>
+    ` : ''}
+    ${traitLabels.length > 0 ? `
+      <div class="modal-detail">
+        <div class="modal-detail-label">Personalidade</div>
+        <div class="modal-detail-value">${traitLabels.join(', ')}</div>
+      </div>
+    ` : ''}
+    ${character.speech ? `
+      <div class="modal-detail">
+        <div class="modal-detail-label">Tom de voz</div>
+        <div class="modal-detail-value">${escapeHtml(character.speech)}</div>
+      </div>
+    ` : ''}
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  const savedLang = localStorage.getItem('soulchat-lang') || (navigator.language || 'pt-BR');
+  const supported = Object.keys(I18N);
+  const matched = supported.find(l => savedLang.startsWith(l.split('-')[0])) || 'pt-BR';
+  document.getElementById('langSelect').value = matched;
+  applyLang(matched);
+
+  document.getElementById('langSelect').addEventListener('change', (e) => {
+    localStorage.setItem('soulchat-lang', e.target.value);
+    applyLang(e.target.value);
+  });
+});
+</script>
+
+</body>
+</html>
