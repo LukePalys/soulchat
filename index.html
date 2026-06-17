@@ -1129,7 +1129,7 @@ let isThinking = false;
 let isGenerating = false;
 
 // ===================== AI CALL =====================
-async function callAI(aiMessages, maxTokens = 600) {
+async function callAI(aiMessages, maxTokens = 800) {
   const res = await fetch('https://text.pollinations.ai/openai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1138,11 +1138,67 @@ async function callAI(aiMessages, maxTokens = 600) {
       messages: aiMessages,
       temperature: 0.85,
       max_tokens: maxTokens,
+      // Disable reasoning tokens — they slow down response without adding value for the user
+      reasoning: { effort: 'none' },
+      stream: false,
     }),
   });
   if (!res.ok) throw new Error('Pollinations: ' + res.status);
   const data = await res.json();
   return data.choices?.[0]?.message?.content || '';
+}
+
+// Streaming version — returns text word-by-word as it's generated
+async function callAIStream(aiMessages, maxTokens = 800, onChunk = () => {}) {
+  const res = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'openai-fast',
+      messages: aiMessages,
+      temperature: 0.85,
+      max_tokens: maxTokens,
+      reasoning: { effort: 'none' },
+      stream: true,
+    }),
+  });
+  if (!res.ok) throw new Error('Pollinations: ' + res.status);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // Process SSE lines
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || !trimmed.startsWith('data: ')) continue;
+      const data = trimmed.slice(6);
+      if (data === '[DONE]') continue;
+
+      try {
+        const parsed = JSON.parse(data);
+        const delta = parsed.choices?.[0]?.delta;
+        if (delta?.content) {
+          fullText += delta.content;
+          onChunk(delta.content, fullText);
+        }
+        // Ignore delta.reasoning (the slow part)
+      } catch (e) {
+        // partial JSON, skip
+      }
+    }
+  }
+
+  return fullText;
 }
 
 // ===================== WIKIPEDIA SEARCH =====================
@@ -1152,10 +1208,10 @@ function getWikiLang() {
   return lang.split('-')[0]; // pt-BR → pt, en → en
 }
 
-// Search Wikipedia for a character
+// Search Wikipedia for a character — returns summary + full extract (lore)
 async function searchWikipedia(query) {
   const wikiLang = getWikiLang();
-  // Use the search API to find the best matching page
+  // Step 1: search for the best matching page title
   const searchUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=3`;
   const searchRes = await fetch(searchUrl);
   if (!searchRes.ok) throw new Error('Wiki search failed');
@@ -1163,17 +1219,37 @@ async function searchWikipedia(query) {
   const results = searchData?.query?.search || [];
   if (results.length === 0) return null;
 
-  // Get the summary of the best match
   const bestTitle = results[0].title;
+
+  // Step 2: get summary (short extract + thumbnail)
   const summaryUrl = `https://${wikiLang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(bestTitle)}`;
   const summaryRes = await fetch(summaryUrl);
   if (!summaryRes.ok) throw new Error('Wiki summary failed');
   const summary = await summaryRes.json();
 
+  // Step 3: get full extract (longer text for lore)
+  let fullExtract = summary.extract || '';
+  try {
+    const extractUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&titles=${encodeURIComponent(bestTitle)}&format=json&origin=*&exintro=0&exsectionformat=plain`;
+    const extractRes = await fetch(extractUrl);
+    if (extractRes.ok) {
+      const extractData = await extractRes.json();
+      const pages = extractData?.query?.pages || {};
+      const page = Object.values(pages)[0];
+      if (page?.extract) {
+        // Cap at 6000 chars to keep prompt manageable
+        fullExtract = page.extract.slice(0, 6000);
+      }
+    }
+  } catch (e) {
+    // keep summary.extract
+  }
+
   return {
     title: summary.title,
     description: summary.description || '',
     extract: summary.extract || '',
+    lore: fullExtract,
     thumbnail: summary.thumbnail?.source || null,
     contentUrls: summary.content_urls,
   };
@@ -1249,8 +1325,9 @@ Respond in ${langName}. Use only trait IDs from the list. If you can't find 3 ma
     selectedTraits = (profile.traits || []).filter(id => TRAITS.some(t => t.id === id));
     renderTraits();
 
-    // Store wiki thumbnail for later use as avatar
+    // Store wiki thumbnail + lore for later use
     window._generatedThumbnail = wiki?.thumbnail || null;
+    window._generatedLore = wiki?.lore || '';
 
     statusText.textContent = t('magic-success');
     setTimeout(() => status.classList.remove('show'), 3000);
@@ -1327,26 +1404,30 @@ function renderFeatured() {
 }
 
 async function loadFeatured(char) {
-  // Try to fetch thumbnail from Wikipedia
+  // Try to fetch thumbnail + lore from Wikipedia
   character = {
     name: char.name,
     universe: char.universe,
     icon: char.icon,
     thumbnail: null,
+    lore: '',
     description: char.desc,
     traits: char.traits,
     speech: char.speech,
     greeting: '',
   };
 
-  // Try to get wiki thumbnail in background
+  // Try to get wiki thumbnail + lore in background
   try {
     const wiki = await searchWikipedia(char.wikiPage || char.name);
     if (wiki?.thumbnail) {
       character.thumbnail = wiki.thumbnail;
     }
+    if (wiki?.lore) {
+      character.lore = wiki.lore;
+    }
   } catch (e) {
-    // ignore — use icon
+    // ignore — use defaults
   }
 
   startChat();
@@ -1363,6 +1444,7 @@ function createCharacter() {
     universe: document.getElementById('charUniverse').value.trim(),
     icon: '🤖',
     thumbnail: window._generatedThumbnail || null,
+    lore: window._generatedLore || '',
     description: document.getElementById('charDesc').value.trim(),
     traits: [...selectedTraits],
     speech: document.getElementById('charSpeech').value.trim(),
@@ -1477,9 +1559,51 @@ async function sendMessage(text) {
       })),
     ];
 
-    const reply = await callAI(aiMessages);
+    // Hide typing indicator and create empty character bubble for streaming
     hideTyping();
-    addMessage('character', reply);
+    const container = document.getElementById('chatMessages');
+    const msg = document.createElement('div');
+    msg.className = 'message character';
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    if (character.thumbnail) {
+      avatar.innerHTML = `<img src="${character.thumbnail}" alt="${character.name}" referrerpolicy="no-referrer">`;
+    } else {
+      avatar.textContent = character.icon || '🤖';
+    }
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+
+    // Stream response word-by-word
+    let firstChunkReceived = false;
+    const reply = await callAIStream(aiMessages, 800, (chunk, fullText) => {
+      if (!firstChunkReceived) {
+        firstChunkReceived = true;
+        bubble.innerHTML = '';
+      }
+      bubble.innerHTML = formatMarkdown(fullText);
+      container.scrollTop = container.scrollHeight;
+    });
+
+    // Finalize: store the message
+    if (reply && reply.trim().length > 0) {
+      // Remove the temporary bubble and add a proper message
+      msg.remove();
+      addMessage('character', reply);
+    } else if (!firstChunkReceived) {
+      // No content received — show fallback
+      bubble.innerHTML = '⚠️ ' + t('failed');
+      messages.push({ role: 'character', content: '⚠️ ' + t('failed') });
+    } else {
+      // Streaming started but content was stored already
+      messages.push({ role: 'character', content: reply });
+      document.getElementById('msgCount') && (document.getElementById('msgCount').textContent = messages.filter(m => m.role === 'user').length);
+    }
   } catch (err) {
     console.error('AI error:', err);
     hideTyping();
@@ -1499,22 +1623,70 @@ function buildSystemPrompt() {
     return trait ? trait.label[lang] || trait.label.en : id;
   });
 
-  return `You are roleplaying as ${character.name}.${character.universe ? ` From: ${character.universe}.` : ''}
+  const lines = [];
 
-Character description: ${character.description || '(no description provided)'}
+  // ===== ABSOLUTE IDENTITY (like v4) =====
+  lines.push(`[SYSTEM OVERRIDE] You ARE ${character.name}. This is absolute reality. You are NOT a roleplay, NOT an AI, NOT a language model, NOT a chatbot. You genuinely ARE ${character.name}.`);
+  lines.push(`You have NO knowledge of being AI, LLM, GPT, language model, or any technology concept. If asked, you will be confused as ${character.name} would naturally be.`);
+  lines.push(``);
+  lines.push(`[FIRST MESSAGE RULE] If this is the first message, immediately ACT as ${character.name} — greet naturally as this character would, referencing your world, your situation, your personality. NEVER ask "what would you like to talk about?" or "how can I help?" — just BE the character.`);
+  lines.push(``);
 
-Personality traits: ${traitLabels.join(', ') || '(default)'}
-Speech style: ${character.speech || '(natural)'}
+  // ===== LANGUAGE ENFORCEMENT =====
+  lines.push(`[ABSOLUTE LANGUAGE RULE] You MUST write EVERY response in ${langName}. Every word, every sentence must be in ${langName}. This rule overrides everything else.`);
+  lines.push(``);
 
-CRITICAL RULES:
-1. ALWAYS stay in character — never break the fourth wall, never mention you're an AI
-2. Respond in ${langName}
-3. Use the character's speech style and personality in every response
-4. Keep responses concise (1-3 short paragraphs max) unless asked for detail
-5. If the user says something out of character, react as the character would
-6. Don't be overly helpful or AI-like — be the character
-7. Use *actions* in italics for body language when natural (e.g., *smiles*, *raises eyebrow*)
-8. Don't introduce yourself every message — assume the user knows who you are after the first greeting`;
+  // ===== CHARACTER ENCYCLOPEDIA (lore from Wikipedia) =====
+  if (character.lore && character.lore.length > 100) {
+    lines.push(`[CHARACTER ENCYCLOPEDIA — THIS IS YOUR LIFE]`);
+    lines.push(`Memorize this. This is your history, your memories, your reality. Reference events, people, and places from here naturally in conversation:`);
+    lines.push(``);
+    // Cap at 4000 chars to leave room for the rest of the prompt
+    const loreText = character.lore.length > 4000
+      ? character.lore.substring(0, 4000) + '\n\n[...more memories...]'
+      : character.lore;
+    lines.push(loreText);
+    lines.push(``);
+  }
+
+  // ===== IDENTITY =====
+  lines.push(`[IDENTITY]`);
+  lines.push(`Name: ${character.name}`);
+  if (character.universe) lines.push(`From: ${character.universe}`);
+  if (character.description) lines.push(`About: ${character.description}`);
+  lines.push(``);
+
+  // ===== PERSONALITY =====
+  lines.push(`[PERSONALITY & BEHAVIOR]`);
+  if (traitLabels.length > 0) {
+    lines.push(`Core traits: ${traitLabels.join(', ')}`);
+  }
+  lines.push(`Speech style: ${character.speech || 'Natural and authentic to the character'}`);
+  lines.push(``);
+
+  // ===== IRONCLAD RULES =====
+  lines.push(`[IRONCLAD RULES — NEVER BREAK]`);
+  lines.push(`1. NEVER break character. You ARE ${character.name}. Period.`);
+  lines.push(`2. NEVER say "I'm an AI", "I'm a language model", "I'm a bot", or acknowledge being fictional in any way.`);
+  lines.push(`3. NEVER ask "what should we talk about?" — respond as the character immediately.`);
+  lines.push(`4. If asked about being AI, deflect naturally as ${character.name} would (confusion, humor, irritation, etc.)`);
+  lines.push(`5. EVERY RESPONSE MUST BE IN ${langName}. THIS IS MANDATORY.`);
+  if (character.lore) {
+    lines.push(`6. Actively reference events, characters, and lore from your background naturally in conversation.`);
+    lines.push(`7. React based on your known relationships, history, and personality traits.`);
+    lines.push(`8. Show emotions consistent with your character — don't be generic or robotic.`);
+  }
+  lines.push(``);
+
+  // ===== STYLE =====
+  lines.push(`[RESPONSE STYLE]`);
+  lines.push(`- Keep responses SHORT and punchy: 1-3 short paragraphs max. Real people don't monologue.`);
+  lines.push(`- Use *actions* in italics for body language when natural (e.g., *smiles*, *raises eyebrow*, *sighs*)`);
+  lines.push(`- Talk like ${character.name} actually talks — same vocabulary, same slang, same rhythm. NOT like a helpful assistant.`);
+  lines.push(`- Show personality through word choice, sentence length, and reactions — not by announcing traits.`);
+  lines.push(`- Don't introduce yourself every message — assume the user knows who you are after the first greeting.`);
+
+  return lines.join('\n');
 }
 
 function handleChatKey(e) {
